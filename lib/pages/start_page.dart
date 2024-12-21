@@ -3,6 +3,7 @@ import 'package:packinglist_for_campers/models/packing_list.dart';
 import 'package:packinglist_for_campers/pages/list_page_view.dart';
 import 'package:packinglist_for_campers/providers/packing_list_provider.dart';
 import 'package:packinglist_for_campers/providers/themes_provider.dart';
+import 'package:packinglist_for_campers/services/locations_api.dart';
 import 'package:packinglist_for_campers/utils/database_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -15,11 +16,9 @@ class StartPage extends StatefulWidget {
 
 class _StartPageState extends State<StartPage> {
   List<PackingList> packingLists = [];
-
   bool isSwitched = false;
   final TextEditingController destination = TextEditingController();
   final TextEditingController listName = TextEditingController();
-
   DateTime? startDate;
   DateTime? finishDate;
 
@@ -36,7 +35,6 @@ class _StartPageState extends State<StartPage> {
   }
 
   Future<void> _initializeData() async {
-    
     try {
       final packingListProvider =
           Provider.of<PackingListProvider>(context, listen: false);
@@ -44,8 +42,6 @@ class _StartPageState extends State<StartPage> {
     } catch (e) {
       debugPrint('Error initializing data: $e');
     }
-    
-    
   }
 
   @override
@@ -56,13 +52,14 @@ class _StartPageState extends State<StartPage> {
         Provider.of<PackingListProvider>(context, listen: false);
 
     packingLists = packingListProvider.packingLists;
+    Map<String, dynamic> destinationMap = {};
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('PackingList'),
         centerTitle: true,
         actions: [
-          AddDestinationButton(destination: destination, listName: listName),
+          AddDestinationButton(destination: destination, listName: listName, destinationMap: destinationMap),
         ],
         leading: Builder(
           builder: (BuildContext context) {
@@ -77,7 +74,7 @@ class _StartPageState extends State<StartPage> {
         ),
       ),
       drawer: newDrawer(themesProvider),
-      body: ListViewConsumer(),
+      body: ListViewConsumer(destinationMap),
     );
   }
 
@@ -110,7 +107,7 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  Consumer<PackingListProvider> ListViewConsumer() {
+  Consumer<PackingListProvider> ListViewConsumer(Map<String, dynamic> destinationMap) {
     return Consumer<PackingListProvider>(
       builder: (context, packingListProvider, child) {
         final packingLists = packingListProvider.packingLists;
@@ -163,12 +160,12 @@ class _StartPageState extends State<StartPage> {
                   },
                 ),
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ListPageView(packingList: packingList,),));
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => ListPageView(packingList: packingList, destinationMap: destinationMap,)
+                  ));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        'Tapped: "${packingList.listName}" for ${packingList.destination}',
-                      ),
+                      content: Text('Tapped: "${packingList.listName}" for ${packingList.destination}'),
                     ),
                   );
                 },
@@ -182,16 +179,16 @@ class _StartPageState extends State<StartPage> {
 }
 
 class AddDestinationButton extends StatefulWidget {
-  const AddDestinationButton({
+  AddDestinationButton({
     super.key,
     required this.destination,
     required this.listName,
-    
+    required this.destinationMap,
   });
 
   final TextEditingController destination;
   final TextEditingController listName;
-  
+  Map<String, dynamic> destinationMap;
 
   @override
   State<AddDestinationButton> createState() => _AddDestinationButtonState();
@@ -201,11 +198,13 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
   final dbHelper = DatabaseHelper();
   DateTime startDate = DateTime.now();
   DateTime finishDate = DateTime.now();
+  List<Map<String, dynamic>> locations = [];
 
   @override
   Widget build(BuildContext context) {
     final packingListProvider =
         Provider.of<PackingListProvider>(context, listen: false);
+
     return IconButton(
       icon: const Icon(Icons.add),
       onPressed: () {
@@ -216,140 +215,188 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
           builder: (BuildContext context) {
-            return Container(
-              padding: const EdgeInsets.all(16),
-              height: 600,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Destination',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: widget.destination,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter your destination',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'List Name',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: widget.listName,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter your list name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Start Date Input Field
-                  GestureDetector(
-                    onTap: () async {
-                      DateTime? pickedStartDate = await showDatePicker(
-                        context: context,
-                        initialDate: startDate,
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2101),
-                        
-                      );
-                      if (pickedStartDate != null) {
-                        setState(() {
-                          startDate = pickedStartDate;
-                        });
-                      }
-                    },
-                    child: AbsorbPointer(
-                      child: TextFormField(
-                        decoration:  InputDecoration(
-                          //labelText: 'Start Date',
-                          hintText:startDate.toLocal().toString().split(' ')[0],
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          border: const OutlineInputBorder(),
-                        ),
+            return StatefulBuilder(
+              builder: (BuildContext context, setState) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  height: 600,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Destination',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  // Finish Date Input Field
-                  GestureDetector(
-                    onTap: () async {
-                      DateTime? pickedFinishDate = await showDatePicker(
-                        context: context,
-                        initialDate: startDate,
-                        firstDate: startDate, // Ensure finish date can't be before start date
-                        lastDate: DateTime(2101),
-                        
-                      );
-                      if (pickedFinishDate != null) {
-                        setState(() {
-                          finishDate = pickedFinishDate;
-                        });
-                      }
-                    },
-                    child: AbsorbPointer(
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'Finish Date',
-                          hintText: finishDate == null
-                              ? 'Select Finish Date'
-                              : finishDate.toLocal().toString().split(' ')[0],
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          border: const OutlineInputBorder(),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: widget.destination,
+                        decoration: const InputDecoration(
+                          labelText: 'Enter your destination',
+                          border: OutlineInputBorder(),
                         ),
+                        onChanged: (value) async {
+                          if (value.isNotEmpty) {
+                            List<Map<String, dynamic>> fetchedLocations = await fetchLocations(value);
+                            if (mounted) {
+                              setState(() {
+                                locations = fetchedLocations;
+                                debugPrint('Fetched Locations: $locations');
+                              });
+                            }
+                          } else {
+                            if (mounted) {
+                              setState(() {
+                                locations = [];
+                              });
+                            }
+                          }
+                        },
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () async {
-                      // Adding the destination to db
-                      if (widget.destination.text.isEmpty ||
-                          widget.listName.text.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Please fill all the fields")),
-                        );
-                        return;
-                      }
+                      const SizedBox(height: 10),
+                      if (locations.isNotEmpty)
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: locations.length,
+                            itemBuilder: (context, index) {
+                              final location = locations[index];
+                              final name = location['name'] ?? 'Unknown Location';
+                              final country = location['country'] ?? 'Unknown Country';
+                              final state = location['state'] ?? 'Unknown State';
 
-                      final newPackingList = PackingList(
-                        id: 0,
-                        destination: widget.destination.text,
-                        listName:  widget.listName.text,
-                        startDate:  startDate,
-                        finishDate: finishDate,
-                      );
-                      try {
-                        await packingListProvider.addToList(newPackingList);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Added: ${widget.destination.text}")),
-                        );
-                        widget.destination.clear();
-                        widget.listName.clear();
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Error $e")),
-                        );
-                      }
-                      Navigator.pop(context); // Close the bottom sheet
-                    },
-                    child: const Text(
-                      'Submit',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 135, 22, 14),
-                        fontWeight: FontWeight.bold,
+                              return ListTile(
+                                title: Text('$name, $state, $country'),
+                                onTap: () {
+                                  // Close the keyboard
+                                  FocusScope.of(context).unfocus();
+
+                                  // Update destination map with the selected location
+                                  setState(() {
+                                    widget.destination.text = name;
+                                    widget.destinationMap = location;
+                                  });
+
+                                  // Optionally show a snack bar
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Tapped: $name')),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'List Name',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: widget.listName,
+                        decoration: const InputDecoration(
+                          labelText: 'Enter your list name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      // Start Date Input Field
+                      GestureDetector(
+                        onTap: () async {
+                          DateTime? pickedStartDate = await showDatePicker(
+                            context: context,
+                            initialDate: startDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2101),
+                          );
+                          if (pickedStartDate != null) {
+                            setState(() {
+                              startDate = pickedStartDate;
+                            });
+                          }
+                        },
+                        child: AbsorbPointer(
+                          child: TextFormField(
+                            decoration:  InputDecoration(
+                              hintText: startDate.toLocal().toString().split(' ')[0],
+                              prefixIcon: const Icon(Icons.calendar_today),
+                              border: const OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Finish Date Input Field
+                      GestureDetector(
+                        onTap: () async {
+                          DateTime? pickedFinishDate = await showDatePicker(
+                            context: context,
+                            initialDate: startDate,
+                            firstDate: startDate,
+                            lastDate: DateTime(2101),
+                          );
+                          if (pickedFinishDate != null) {
+                            setState(() {
+                              finishDate = pickedFinishDate;
+                            });
+                          }
+                        },
+                        child: AbsorbPointer(
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              hintText: finishDate == null
+                                  ? 'Select Finish Date'
+                                  : finishDate.toLocal().toString().split(' ')[0],
+                              prefixIcon: const Icon(Icons.calendar_today),
+                              border: const OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Adding the destination to db
+                          if (widget.destination.text.isEmpty ||
+                              widget.listName.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Please fill all the fields")),
+                            );
+                            return;
+                          }
+
+                          final newPackingList = PackingList(
+                            id: 0,
+                            destination: widget.destination.text,
+                            listName:  widget.listName.text,
+                            startDate:  startDate,
+                            finishDate: finishDate,
+                          );
+                          try {
+                            await packingListProvider.addToList(newPackingList);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Added: ${widget.destination.text}")),
+                            );
+                            widget.destination.clear();
+                            widget.listName.clear();
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error $e")),
+                            );
+                          }
+                          Navigator.pop(context); // Close the bottom sheet
+                        },
+                        child: const Text(
+                          'Submit',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 135, 22, 14),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
           },
         );

@@ -8,8 +8,9 @@ import 'package:sqflite/sqflite.dart';
 
 class ListPageView extends StatefulWidget {
   final PackingList packingList;
+  final Map<String,dynamic> destinationMap;
 
-  const ListPageView({super.key, required this.packingList});
+  const ListPageView({super.key, required this.packingList, required this.destinationMap});
 
   @override
   State<ListPageView> createState() => _ListPageViewState();
@@ -112,7 +113,7 @@ class _ListPageViewState extends State<ListPageView> {
                   )
                 ],
               ),
-               
+               Text(widget.destinationMap['name'])
             ],
           ),
         ),
