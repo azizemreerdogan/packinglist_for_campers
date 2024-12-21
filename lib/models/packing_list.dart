@@ -1,19 +1,35 @@
+import 'package:packinglist_for_campers/models/packing_item.dart';
+
 class PackingList {
   final int _id;
   String _destination;
   String _listName;
   final DateTime? _startDate;
   final DateTime? _finishDate;
+  List<PackingItem>? _packingItems;
+  
 
   // Constructor
-  PackingList(this._id, this._destination, this._listName,this._startDate,this._finishDate);
-
+  PackingList({required int id, required String destination,required String listName, DateTime? startDate,
+  DateTime? finishDate, List<PackingItem>? packingItems})
+    : _id = id,
+      _destination = destination,
+      _listName = listName,
+      _startDate = startDate,
+      _finishDate = finishDate,
+      _packingItems = packingItems ?? [];
+  
+  void addItems(PackingItem newItem){
+    _packingItems!.add(newItem);
+  }
+  
   // Getters
   int get id => _id;
   String get destination => _destination;
   String get listName => _listName;
   DateTime? get startDate => _startDate;
   DateTime? get finishDate => _finishDate;
+  List<PackingItem>? get packingItems => _packingItems;
   
 
   // Setters

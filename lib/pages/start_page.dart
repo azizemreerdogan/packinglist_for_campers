@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:packinglist_for_campers/models/packing_list.dart';
 import 'package:packinglist_for_campers/pages/list_page_view.dart';
 import 'package:packinglist_for_campers/providers/packing_list_provider.dart';
-import 'package:packinglist_for_campers/themes/themes_provider.dart';
+import 'package:packinglist_for_campers/providers/themes_provider.dart';
 import 'package:packinglist_for_campers/utils/database_helper.dart';
 import 'package:provider/provider.dart';
 
@@ -320,11 +320,11 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                       }
 
                       final newPackingList = PackingList(
-                        0,
-                        widget.destination.text,
-                        widget.listName.text,
-                        startDate,
-                        finishDate,
+                        id: 0,
+                        destination: widget.destination.text,
+                        listName:  widget.listName.text,
+                        startDate:  startDate,
+                        finishDate: finishDate,
                       );
                       try {
                         await packingListProvider.addToList(newPackingList);

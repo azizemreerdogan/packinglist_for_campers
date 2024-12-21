@@ -24,9 +24,10 @@ class PackingListProvider extends ChangeNotifier{
    
   }
   
-  Future<void> fetchPackingListById(int id) async{
+  Future<PackingList?> fetchPackingListById(int id) async{
     PackingList? packingList1 = await dbHelper.getPackingList(id);
-    notifyListeners();
+    return packingList1;
+    
   }
   
   Future<void> updatePackingList(PackingList packingList) async{
@@ -45,5 +46,6 @@ class PackingListProvider extends ChangeNotifier{
     _packingList.clear();
     notifyListeners();
   }
+  
   
 }
