@@ -16,9 +16,10 @@ class LittleContainer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12.0), // Add padding inside the container
       decoration: BoxDecoration(
+        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8.0), // Rounded corners
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface, // Border color based on theme
+          color: Theme.of(context).colorScheme.outline, // Border color based on theme
           width: 2.0, // Border width
         ),
       ),
@@ -27,7 +28,7 @@ class LittleContainer extends StatelessWidget {
         style: TextStyle(
           fontSize: 16, // Text size
           fontWeight: FontWeight.bold, // Text bold
-          color: Theme.of(context).colorScheme.onSurface, // Text color based on theme
+          color: Theme.of(context).colorScheme.onSecondary, // Text color based on theme
         ),
       ),
     );

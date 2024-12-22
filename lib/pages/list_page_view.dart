@@ -1,15 +1,18 @@
-import 'dart:ffi';
+
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:packinglist_for_campers/components/horizontalCardListView.dart';
 import 'package:packinglist_for_campers/components/littleContainer.dart';
 import 'package:packinglist_for_campers/models/packing_item.dart';
 import 'package:packinglist_for_campers/models/packing_list.dart';
+import 'package:packinglist_for_campers/models/weather.dart';
 import 'package:packinglist_for_campers/providers/packing_items_provider.dart';
 import 'package:packinglist_for_campers/services/locations_api.dart';
 import 'package:packinglist_for_campers/services/weather_api.dart';
-import 'package:packinglist_for_campers/utils/database_helper.dart';
+
 import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
+
 
 class ListPageView extends StatefulWidget {
   final PackingList packingList;
@@ -27,6 +30,7 @@ class _ListPageViewState extends State<ListPageView> {
   
 
   List<dynamic> fetchedWeatherList = [];
+  List<Weather> weatherObjectList = [];
   Map<String,dynamic> destinationMap = {};
   
   
@@ -37,8 +41,30 @@ class _ListPageViewState extends State<ListPageView> {
     Map<String,dynamic> destinationMap = fetchedLocations.first;
     String lat = destinationMap['lat'].toString();
     String lon = destinationMap['lon'].toString();
-    List<dynamic> fetchedWeather = await fetchWeather(lat, lon);
+    List<Map<String,dynamic>> fetchedWeather = await fetchWeather(lat, lon);
     fetchedWeatherList = fetchedWeather;
+    List<Weather> weatherObjectList1 = [];
+    for (var element in fetchedWeatherList) {
+      weatherObjectList1.add(Weather.fromMapToObject(element)); 
+    }
+    setState(() {
+      weatherObjectList = filterDailyWeather(weatherObjectList1);
+    });
+    
+
+  }
+  
+  List<Weather> filterDailyWeather(List<Weather> weatherList) {
+  final Map<String, Weather> uniqueDays = {};
+
+  for (var weather in weatherList) {
+    final dateKey = DateFormat('yyyy-MM-dd').format(weather.weatherDate);
+    if (!uniqueDays.containsKey(dateKey)) {
+      uniqueDays[dateKey] = weather;
+    }
+  }
+
+   return uniqueDays.values.toList();
   }
   
   int completedCounter(List<PackingItem?> packingItems) {
@@ -88,7 +114,9 @@ class _ListPageViewState extends State<ListPageView> {
               ),
               const SizedBox(height: 10),
               TextField(
+                
                 decoration: InputDecoration(
+                  
                   hintText: 'Search...',
                   prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
@@ -103,7 +131,7 @@ class _ListPageViewState extends State<ListPageView> {
                       color: Theme.of(context).primaryColor, // Focused border color based on theme
                     ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                 ),
               ),
               const SizedBox(height: 10),
@@ -130,6 +158,7 @@ class _ListPageViewState extends State<ListPageView> {
                       ),
                     ),
                     child: const IconButton(
+                      color: Colors.black54,
                       padding: EdgeInsets.zero,
                       onPressed: null,
                       icon: Icon(Icons.notifications_sharp,
@@ -137,6 +166,8 @@ class _ListPageViewState extends State<ListPageView> {
                   )
                 ],
               ),
+              const SizedBox(height: 15,),
+              HorizontalCardListView(items: weatherObjectList)
                //Text(destinationMap['name'])
             ],
           ),
@@ -164,57 +195,3 @@ class _ListPageViewState extends State<ListPageView> {
 }
 
 
-class HorizontalCardListView extends StatelessWidget {
-  final List<String> items;
-
-  const HorizontalCardListView({super.key, required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 200, // Set height for the ListView
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal, // Scroll horizontally
-        itemCount: items.length,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 16), // Spacing between cards
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                width: 150, // Set width for each card
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.blue.shade300,
-                      Colors.blue.shade700,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    items[index],
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
