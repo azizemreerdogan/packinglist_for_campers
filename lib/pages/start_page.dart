@@ -6,6 +6,7 @@ import 'package:packinglist_for_campers/providers/themes_provider.dart';
 import 'package:packinglist_for_campers/services/locations_api.dart';
 import 'package:packinglist_for_campers/utils/database_helper.dart';
 import 'package:provider/provider.dart';
+import 'package:packinglist_for_campers/components/newDrawer.dart';
 
 class StartPage extends StatefulWidget {
   const StartPage({super.key});
@@ -59,7 +60,7 @@ class _StartPageState extends State<StartPage> {
         title: const Text('PackingList'),
         centerTitle: true,
         actions: [
-          AddDestinationButton(destination: destination, listName: listName, destinationMap: destinationMap),
+          AddDestinationButton(destination: destination, listName: listName),
         ],
         leading: Builder(
           builder: (BuildContext context) {
@@ -73,40 +74,21 @@ class _StartPageState extends State<StartPage> {
           },
         ),
       ),
-      drawer: newDrawer(themesProvider),
+      drawer: newDrawer(
+      themesProvider: themesProvider,
+      isSwitched: isSwitched,
+      onThemeToggle: (value) {
+        themesProvider.toggleTheme();
+        setState(() {
+          isSwitched  = true;
+        });
+      },
+      ),
       body: ListViewConsumer(destinationMap),
     );
   }
 
-  Drawer newDrawer(ThemesProvider themesProvider) {
-    return Drawer(
-      child: ListView(
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.red),
-            child: Text(
-              'Let\'s go camping!',
-              style: TextStyle(fontSize: 24, color: Colors.white),
-            ),
-          ),
-          ListTile(
-            title: const Text('Dark Mode'),
-            trailing: Switch(
-              value: isSwitched,
-              onChanged: (value) {
-                themesProvider.toggleTheme();
-                setState(() {
-                  isSwitched = value;
-                });
-              },
-              activeColor: Colors.red,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
   Consumer<PackingListProvider> ListViewConsumer(Map<String, dynamic> destinationMap) {
     return Consumer<PackingListProvider>(
       builder: (context, packingListProvider, child) {
@@ -161,7 +143,7 @@ class _StartPageState extends State<StartPage> {
                 ),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => ListPageView(packingList: packingList, destinationMap: destinationMap,)
+                    builder: (context) => ListPageView(packingList: packingList, destinationMap: packingListProvider.locationMap,destinationName: destination.text,)
                   ));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -179,16 +161,16 @@ class _StartPageState extends State<StartPage> {
 }
 
 class AddDestinationButton extends StatefulWidget {
-  AddDestinationButton({
+  const AddDestinationButton({
     super.key,
     required this.destination,
     required this.listName,
-    required this.destinationMap,
+    
   });
 
   final TextEditingController destination;
   final TextEditingController listName;
-  Map<String, dynamic> destinationMap;
+  
 
   @override
   State<AddDestinationButton> createState() => _AddDestinationButtonState();
@@ -198,7 +180,10 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
   final dbHelper = DatabaseHelper();
   DateTime startDate = DateTime.now();
   DateTime finishDate = DateTime.now();
+  Map<String, dynamic>? destinationMap;
   List<Map<String, dynamic>> locations = [];
+  
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -269,11 +254,12 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                                 onTap: () {
                                   // Close the keyboard
                                   FocusScope.of(context).unfocus();
+                                  packingListProvider.insertLocationMap(location);
 
                                   // Update destination map with the selected location
                                   setState(() {
                                     widget.destination.text = name;
-                                    widget.destinationMap = location;
+                                    destinationMap = location;
                                   });
 
                                   // Optionally show a snack bar
@@ -343,7 +329,7 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                         child: AbsorbPointer(
                           child: TextFormField(
                             decoration: InputDecoration(
-                              hintText: finishDate == null
+                              hintText: finishDate != DateTime.now()
                                   ? 'Select Finish Date'
                                   : finishDate.toLocal().toString().split(' ')[0],
                               prefixIcon: const Icon(Icons.calendar_today),
@@ -370,8 +356,10 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                             listName:  widget.listName.text,
                             startDate:  startDate,
                             finishDate: finishDate,
+                            
                           );
                           try {
+                          
                             await packingListProvider.addToList(newPackingList);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Added: ${widget.destination.text}")),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> fetchLocations(String cityName) async {
-  const apiKey = 'ea8512638ef896b92b8c8a268c0d0beb';
+  const apiKey = '*';
   const apiLimit = 5;
   final url = Uri.parse(
       'http://api.openweathermap.org/geo/1.0/direct?q=$cityName&limit=$apiLimit&appid=$apiKey');
@@ -26,6 +26,7 @@ Future<List<Map<String, dynamic>>> fetchLocations(String cityName) async {
         };
       }).toList();
     } else {
+      debugPrint("locations api error");
       debugPrint('Error: ${response.statusCode}');
     }
   } catch (e) {

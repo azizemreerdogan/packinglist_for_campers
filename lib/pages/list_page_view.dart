@@ -1,7 +1,12 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:packinglist_for_campers/components/littleContainer.dart';
 import 'package:packinglist_for_campers/models/packing_item.dart';
 import 'package:packinglist_for_campers/models/packing_list.dart';
 import 'package:packinglist_for_campers/providers/packing_items_provider.dart';
+import 'package:packinglist_for_campers/services/locations_api.dart';
+import 'package:packinglist_for_campers/services/weather_api.dart';
 import 'package:packinglist_for_campers/utils/database_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,8 +14,10 @@ import 'package:sqflite/sqflite.dart';
 class ListPageView extends StatefulWidget {
   final PackingList packingList;
   final Map<String,dynamic> destinationMap;
+  final String destinationName;
 
-  const ListPageView({super.key, required this.packingList, required this.destinationMap});
+  const ListPageView({super.key, required this.packingList, required this.destinationMap,
+  required this.destinationName});
 
   @override
   State<ListPageView> createState() => _ListPageViewState();
@@ -18,16 +25,33 @@ class ListPageView extends StatefulWidget {
 
 class _ListPageViewState extends State<ListPageView> {
   
+
+  List<dynamic> fetchedWeatherList = [];
+  Map<String,dynamic> destinationMap = {};
+  
   
   Future<void> _initializeData() async{
     final packingItemProvider = Provider.of<PackingItemsProvider>(context,listen: false);
     await packingItemProvider.fetchPackingItems(widget.packingList.id);
-    
+    List<Map<String, dynamic>> fetchedLocations = await fetchLocations(widget.packingList.destination);
+    Map<String,dynamic> destinationMap = fetchedLocations.first;
+    String lat = destinationMap['lat'].toString();
+    String lon = destinationMap['lon'].toString();
+    List<dynamic> fetchedWeather = await fetchWeather(lat, lon);
+    fetchedWeatherList = fetchedWeather;
   }
   
   int completedCounter(List<PackingItem?> packingItems) {
   return packingItems.where((item) => item?.isPacked ?? false).length;
   }
+  
+  @override
+  void initState() {
+    _initializeData();
+    super.initState();
+  }
+  
+  
 
   
   @override
@@ -113,7 +137,7 @@ class _ListPageViewState extends State<ListPageView> {
                   )
                 ],
               ),
-               Text(widget.destinationMap['name'])
+               //Text(destinationMap['name'])
             ],
           ),
         ),
@@ -125,7 +149,7 @@ class _ListPageViewState extends State<ListPageView> {
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,
               onPressed: () {
                 // Add logic to navigate or show a dialog for adding items
-                print('Add item button clicked');
+                debugPrint('Add item button clicked');
               },
               child:  const Icon(Icons.add, color: Colors.redAccent),
             ),
@@ -139,34 +163,57 @@ class _ListPageViewState extends State<ListPageView> {
   }
 }
 
-class LittleContainer extends StatelessWidget {
-  const LittleContainer({
-    super.key,
-    required this.widget,
-    required this.textData,
-  });
 
-  final ListPageView widget;
-  final String textData;
+class HorizontalCardListView extends StatelessWidget {
+  final List<String> items;
+
+  const HorizontalCardListView({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12.0), // Add padding inside the container
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.0), // Rounded corners
-        border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface, // Border color based on theme
-          width: 2.0, // Border width
-        ),
-      ),
-      child: Text(
-        textData,
-        style: TextStyle(
-          fontSize: 16, // Text size
-          fontWeight: FontWeight.bold, // Text bold
-          color: Theme.of(context).colorScheme.onSurface, // Text color based on theme
-        ),
+    return SizedBox(
+      height: 200, // Set height for the ListView
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal, // Scroll horizontally
+        itemCount: items.length,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 16), // Spacing between cards
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: 150, // Set width for each card
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.shade300,
+                      Colors.blue.shade700,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    items[index],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

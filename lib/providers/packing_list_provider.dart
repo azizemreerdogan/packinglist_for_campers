@@ -8,6 +8,9 @@ class PackingListProvider extends ChangeNotifier{
   final dbHelper = DatabaseHelper();
   final List<PackingList> _packingList = [];
   List<PackingList> get packingLists => _packingList;
+  Map<String,dynamic> _locationMap = {};
+  Map<String,dynamic> get locationMap => _locationMap;
+  
   
   
   Future<void> fetchPackingLists() async{
@@ -46,6 +49,12 @@ class PackingListProvider extends ChangeNotifier{
     _packingList.clear();
     notifyListeners();
   }
+  
+  Future<void> insertLocationMap(Map<String,dynamic> locationMap) async{
+    _locationMap = locationMap;
+    notifyListeners();
+  }
+  
   
   
 }
