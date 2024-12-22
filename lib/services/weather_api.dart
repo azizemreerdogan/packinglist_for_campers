@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> fetchWeather(String lat,String lon) async {
-  const apiKey = '*';
+  const apiKey = 'ea8512638ef896b92b8c8a268c0d0beb';
   final url = Uri.parse(
       'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey');
 
@@ -23,9 +23,11 @@ Future<List<Map<String, dynamic>>> fetchWeather(String lat,String lon) async {
             : {};
         
         return {
-          'main_weather': weather['main'] ?? '',  
-          'weather_desc': weather['description'] ?? '',  
-          'date': e['dt_txt'] ?? '',  
+          'main': weather['main'] ?? '',  
+          'description': weather['description'] ?? '', 
+          'temp_min' : e['main']['temp_min'] ?? 0.0, 
+          'temp_max' : e['main']['temp_max'] ?? 0.0,
+          'dt_txt': e['dt_txt'] ?? '',  
         };
       }).toList();
     } else {
