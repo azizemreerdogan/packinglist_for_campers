@@ -7,17 +7,20 @@ class PackingList {
   final DateTime? _startDate;
   final DateTime? _finishDate;
   List<PackingItem>? _packingItems;
+  Map<String,dynamic>? _locationMap;
   
 
   // Constructor
   PackingList({required int id, required String destination,required String listName, DateTime? startDate,
-  DateTime? finishDate, List<PackingItem>? packingItems})
+  DateTime? finishDate, List<PackingItem>? packingItems, Map<String,dynamic>? locationMap})
     : _id = id,
       _destination = destination,
       _listName = listName,
       _startDate = startDate,
       _finishDate = finishDate,
-      _packingItems = packingItems ?? [];
+      _packingItems = packingItems ?? [],
+      _locationMap = locationMap ?? {};
+      
   
   void addItems(PackingItem newItem){
     _packingItems!.add(newItem);
@@ -30,6 +33,7 @@ class PackingList {
   DateTime? get startDate => _startDate;
   DateTime? get finishDate => _finishDate;
   List<PackingItem>? get packingItems => _packingItems;
+  Map<String,dynamic>? get locationMap => _locationMap;
   
 
   // Setters

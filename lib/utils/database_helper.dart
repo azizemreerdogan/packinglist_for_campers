@@ -162,6 +162,10 @@ class DatabaseHelper {
       where: '$colListForeignKey = ?',
       whereArgs: [listId],
     );
+    // Check if the query result is empty
+  if (maps.isEmpty) {
+    return []; // Return an empty list if no items are found
+  }
     
     return List.generate(maps.length, (i) {
       return PackingItem.fromMapObject(maps[i]);
