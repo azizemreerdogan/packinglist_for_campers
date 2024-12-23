@@ -18,11 +18,12 @@ class PackingItemsProvider extends ChangeNotifier{
   Future<void> addToItemsList(PackingItem packingItem, int listId) async{
     _packingItems.add(packingItem);
     await dbHelper.insertPackingItem(packingItem, listId);
+    fetchPackingItems(listId);
     notifyListeners();
   }
   
   Future<PackingItem?> fetchPackingItemById(int listId, PackingItem packingItem) async{
-    PackingItem? packingItem1 = await dbHelper.getPackingItemById(listId, packingItem);
+    PackingItem? packingItem1 = await dbHelper.getPackingItemById(listId);
     return packingItem1;
   }
   
@@ -32,7 +33,7 @@ class PackingItemsProvider extends ChangeNotifier{
   
   Future<void> deletePackingItem(int listId, PackingItem packingItem) async{
     _packingItems.removeWhere((e) => e.id == packingItem.id);
-    await dbHelper.deletePackingItem(listId);
+    await dbHelper.deletePackingItem(packingItem,listId);
     notifyListeners();
   } 
   

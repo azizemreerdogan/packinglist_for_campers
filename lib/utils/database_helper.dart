@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:packinglist_for_campers/models/packing_item.dart';
 import 'package:packinglist_for_campers/models/packing_list.dart';
 import 'package:path/path.dart';
@@ -142,17 +143,25 @@ class DatabaseHelper {
   //CRUD Operations for packingItem
   
   //insertion
-  Future<int> insertPackingItem(PackingItem packingItem, int listId) async{
-    final db = await database;
-    return await db.insert(
-      tablePackingItem,
-      {
-        ...packingItem.toMap(),
-        colListForeignKey : listId
-        
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<int> insertPackingItem(PackingItem packingItem, int listId) async {
+    try {
+      final db = await database;
+      return await db.insert(
+        tablePackingItem,
+        {
+          ...packingItem.toMap(),
+          colListForeignKey: listId,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    } catch (e, stacktrace) {
+      debugPrint('Error inserting packing item: $e');
+      debugPrint('Stacktrace: $stacktrace');
+      return -1; // Return a failure indicator (could be any appropriate value)
+    }
   }
+
+
   
   //Get List that includes packing items 
   Future<List<PackingItem>> getPackingItems(int listId) async{
@@ -172,7 +181,7 @@ class DatabaseHelper {
     });
   }
   
-  Future<PackingItem?> getPackingItemById(int listId,PackingItem packingItem) async{
+  Future<PackingItem?> getPackingItemById(int listId) async{
     final db = await database;
     final List<Map<String,dynamic>> maps = await db.query(
       tablePackingItem,
@@ -198,12 +207,12 @@ class DatabaseHelper {
     );
   }
   
-  Future<int> deletePackingItem(int id) async{
+  Future<int> deletePackingItem(PackingItem packingItem,int listId) async{
     final db = await database;
     return await db.delete(
       tablePackingItem,
-      where: '$colItemId = ?',
-      whereArgs:  [id]
+      where: '$colListForeignKey = ? AND $colItemId = ?',
+      whereArgs:  [listId,packingItem.id]
     );
   }
   
