@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PackingItem{
-  int id;
+  int? id;
   String name;
   bool isPacked;
   

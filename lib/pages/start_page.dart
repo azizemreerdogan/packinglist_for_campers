@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:packinglist_for_campers/models/packing_list.dart';
 import 'package:packinglist_for_campers/pages/list_page_view.dart';
+import 'package:packinglist_for_campers/providers/packing_items_provider.dart';
 import 'package:packinglist_for_campers/providers/packing_list_provider.dart';
 import 'package:packinglist_for_campers/providers/themes_provider.dart';
 import 'package:packinglist_for_campers/services/locations_api.dart';
@@ -74,6 +75,7 @@ class _StartPageState extends State<StartPage> {
           },
         ),
       ),
+      resizeToAvoidBottomInset: true,
       drawer: newDrawer(
       themesProvider: themesProvider,
       isSwitched: isSwitched,
@@ -84,7 +86,9 @@ class _StartPageState extends State<StartPage> {
         });
       },
       ),
-      body: ListViewConsumer(destinationMap),
+      body:
+        
+       ListViewConsumer(destinationMap),
     );
   }
 
@@ -120,20 +124,23 @@ class _StartPageState extends State<StartPage> {
                   horizontal: 16,
                 ),
                 title: Text(
-                  packingList.destination,
+                  packingList.listName,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: Text(
-                  packingList.listName,
+                  packingList.destination,
                   style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
+                    PackingItemsProvider packingItemsProvider = Provider.of<PackingItemsProvider>(context, listen: false);
+                    await packingItemsProvider.clearPackingItems(packingList.id);
                     await packingListProvider.deletePackingList(packingList.id);
+                    
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Deleted: ${packingList.listName}'),
@@ -143,7 +150,7 @@ class _StartPageState extends State<StartPage> {
                 ),
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => ListPageView(packingList: packingList, destinationMap: packingListProvider.locationMap,destinationName: destination.text,)
+                    builder: (context) => ListPageView(packingList: packingList, destinationMap: packingListProvider.locationMap,)
                   ));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -190,21 +197,25 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
     final packingListProvider =
         Provider.of<PackingListProvider>(context, listen: false);
 
-    return IconButton(
-      icon: const Icon(Icons.add),
-      onPressed: () {
-        showModalBottomSheet(
-          isScrollControlled: true,
-          context: context,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          builder: (BuildContext context) {
-            return StatefulBuilder(
-              builder: (BuildContext context, setState) {
-                return Container(
+   return IconButton(
+  icon: const Icon(Icons.add),
+  onPressed: () {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom, // Adjust padding for keyboard
+              ),
+              child: SingleChildScrollView(
+                child: Container(
                   padding: const EdgeInsets.all(16),
-                  height: 600,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +237,6 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                             if (mounted) {
                               setState(() {
                                 locations = fetchedLocations;
-                                debugPrint('Fetched Locations: $locations');
                               });
                             }
                           } else {
@@ -240,29 +250,30 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                       ),
                       const SizedBox(height: 10),
                       if (locations.isNotEmpty)
-                        Expanded(
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 200),
                           child: ListView.builder(
+                            shrinkWrap: true,
                             itemCount: locations.length,
                             itemBuilder: (context, index) {
                               final location = locations[index];
                               final name = location['name'] ?? 'Unknown Location';
                               final country = location['country'] ?? 'Unknown Country';
                               final state = location['state'] ?? 'Unknown State';
+                              debugPrint("My state is $state");
 
                               return ListTile(
-                                title: Text('$name, $state, $country'),
+                                title: Text(state != '' ? '$name, $state, $country' : '$name,$country'),
                                 onTap: () {
-                                  // Close the keyboard
-                                  FocusScope.of(context).unfocus();
+                                  FocusScope.of(context).unfocus(); // Dismiss the keyboard
                                   packingListProvider.insertLocationMap(location);
 
-                                  // Update destination map with the selected location
                                   setState(() {
-                                    widget.destination.text = name;
+                                    widget.destination.text = state != '' ? '$name, $state, $country' : '$name,$country';
                                     destinationMap = location;
+                                    locations = [];
                                   });
 
-                                  // Optionally show a snack bar
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('Tapped: $name')),
                                   );
@@ -285,7 +296,6 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                         ),
                       ),
                       const SizedBox(height: 30),
-                      // Start Date Input Field
                       GestureDetector(
                         onTap: () async {
                           DateTime? pickedStartDate = await showDatePicker(
@@ -302,7 +312,7 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                         },
                         child: AbsorbPointer(
                           child: TextFormField(
-                            decoration:  InputDecoration(
+                            decoration: InputDecoration(
                               hintText: startDate.toLocal().toString().split(' ')[0],
                               prefixIcon: const Icon(Icons.calendar_today),
                               border: const OutlineInputBorder(),
@@ -311,7 +321,6 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      // Finish Date Input Field
                       GestureDetector(
                         onTap: () async {
                           DateTime? pickedFinishDate = await showDatePicker(
@@ -329,9 +338,7 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                         child: AbsorbPointer(
                           child: TextFormField(
                             decoration: InputDecoration(
-                              hintText: finishDate != DateTime.now()
-                                  ? 'Select Finish Date'
-                                  : finishDate.toLocal().toString().split(' ')[0],
+                              hintText: finishDate.toLocal().toString().split(' ')[0],
                               prefixIcon: const Icon(Icons.calendar_today),
                               border: const OutlineInputBorder(),
                             ),
@@ -341,9 +348,7 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () async {
-                          // Adding the destination to db
-                          if (widget.destination.text.isEmpty ||
-                              widget.listName.text.isEmpty) {
+                          if (widget.destination.text.isEmpty || widget.listName.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Please fill all the fields")),
                             );
@@ -353,13 +358,12 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                           final newPackingList = PackingList(
                             id: 0,
                             destination: widget.destination.text,
-                            listName:  widget.listName.text,
-                            startDate:  startDate,
+                            listName: widget.listName.text,
+                            startDate: startDate,
                             finishDate: finishDate,
-                            
                           );
+
                           try {
-                          
                             await packingListProvider.addToList(newPackingList);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Added: ${widget.destination.text}")),
@@ -383,12 +387,15 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+              ),
             );
           },
         );
       },
     );
+  },
+);
+
   }
 }
