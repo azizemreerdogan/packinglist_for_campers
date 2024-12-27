@@ -25,13 +25,15 @@ class _AdditemsmodalState extends State<Additemsmodal> {
   Widget build(BuildContext context) {
       PackingItemsProvider packingItemsProvider = Provider.of<PackingItemsProvider>(context,listen: false);
     
-    return ElevatedButton(
+    return  ElevatedButton(
       onPressed: () {
         showModalBottomSheet(
+          
           context: context,
           isScrollControlled: true,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(2)),
+            
           ),
           builder: (BuildContext context) {
             return Padding(
@@ -60,7 +62,7 @@ class _AdditemsmodalState extends State<Additemsmodal> {
                     ElevatedButton(
                       onPressed: () async{
                         PackingItem packingItem = PackingItem(id: null, name: itemNameController.text, isPacked: false);
-                        await packingItemsProvider.addToItemsList(packingItem, widget.packingList.id);
+                        await packingItemsProvider.addToItemsList(packingItem, widget.packingList.id!);
                         //await packingItemsProvider.fetchPackingItems(widget.packingList.id);
                         
                         debugPrint("addToItems called");
@@ -81,7 +83,7 @@ class _AdditemsmodalState extends State<Additemsmodal> {
           },
         );
       },
-      child: const Text('Open Modal'),
+      child: Text('Add Items'),
     );
   }
 }

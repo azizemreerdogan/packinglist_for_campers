@@ -17,14 +17,12 @@ dependencies:
   intl: ^0.18.0
   flutter_dotenv: ^5.0.2
 
- 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
 
-
-
 flutter:
   uses-material-design: true
+  assets:
+    - assets/.env

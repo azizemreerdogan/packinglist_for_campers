@@ -138,8 +138,9 @@ class _StartPageState extends State<StartPage> {
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
                     PackingItemsProvider packingItemsProvider = Provider.of<PackingItemsProvider>(context, listen: false);
-                    await packingItemsProvider.clearPackingItems(packingList.id);
-                    await packingListProvider.deletePackingList(packingList.id);
+                    await packingListProvider.deletePackingListAndItems(packingList.id!);
+                    
+                    
                     
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -356,7 +357,7 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
                           }
 
                           final newPackingList = PackingList(
-                            id: 0,
+                            id: null,
                             destination: widget.destination.text,
                             listName: widget.listName.text,
                             startDate: startDate,
@@ -365,6 +366,9 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
 
                           try {
                             await packingListProvider.addToList(newPackingList);
+                            for (var element in packingListProvider.packingLists) {
+                              debugPrint(element.id.toString());
+                            }
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Added: ${widget.destination.text}")),
                             );

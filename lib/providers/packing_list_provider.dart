@@ -21,10 +21,10 @@ class PackingListProvider extends ChangeNotifier{
   }
   
   Future<void> addToList(PackingList packingList) async{
+    int changedId = await dbHelper.insertPackingList(packingList);
+    packingList.id = changedId;
     _packingList.add(packingList);
-    await dbHelper.insertPackingList(packingList);
     notifyListeners();
-   
   }
   
   Future<PackingList?> fetchPackingListById(int id) async{
@@ -52,6 +52,12 @@ class PackingListProvider extends ChangeNotifier{
   
   Future<void> insertLocationMap(Map<String,dynamic> locationMap) async{
     _locationMap = locationMap;
+    notifyListeners();
+  }
+  
+  Future<void> deletePackingListAndItems(int listId) async{
+    await dbHelper.deletePackingListAndItems(listId);
+    _packingList.removeWhere((e) => e.id == listId);
     notifyListeners();
   }
   

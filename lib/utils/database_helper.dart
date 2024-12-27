@@ -225,6 +225,24 @@ class DatabaseHelper {
     );
   }
   
+  Future<void> deletePackingListAndItems(int listId) async {
+  final db = await database;
+  await db.transaction((txn) async {
+    // Delete all packing items for this list
+    await txn.delete(
+      tablePackingItem,
+      where: '$colListForeignKey = ?',
+      whereArgs: [listId],
+    );
+
+    // Delete the packing list itself
+    await txn.delete(
+      tablePackingList,
+      where: '$colListId = ?',
+      whereArgs: [listId],
+    );
+  });
+}
   
 
 }
