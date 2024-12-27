@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> fetchWeather(String lat,String lon) async {
-  const apiKey = 'ea8512638ef896b92b8c8a268c0d0beb';
+  final apiKey = dotenv.env['OPENWEATHER_API_KEY'];
   final url = Uri.parse(
       'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey');
 

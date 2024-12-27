@@ -4,11 +4,12 @@ import 'package:packinglist_for_campers/providers/packing_items_provider.dart';
 import 'package:packinglist_for_campers/providers/packing_list_provider.dart';
 import 'package:packinglist_for_campers/providers/themes_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async{
   
   
-  
+  await dotenv.load();
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => ThemesProvider()),
     ChangeNotifierProvider(create: (context) => PackingListProvider(),),

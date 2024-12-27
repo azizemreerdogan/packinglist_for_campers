@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<List<Map<String, dynamic>>> fetchLocations(String cityName) async {
-  const apiKey = 'ea8512638ef896b92b8c8a268c0d0beb';
+  final apiKey = dotenv.env['OPENWEATHER_API_KEY'];
   const apiLimit = 5;
   final url = Uri.parse(
       'http://api.openweathermap.org/geo/1.0/direct?q=$cityName&limit=$apiLimit&appid=$apiKey');
