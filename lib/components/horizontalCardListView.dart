@@ -13,14 +13,14 @@ class HorizontalCardListView extends StatelessWidget {
     final textTheme = theme.textTheme;
 
     return SizedBox(
-      height: 90, // Reduced height
+      height: 100, // Increased height to accommodate content
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
         padding: const EdgeInsets.symmetric(horizontal: 3),
         itemBuilder: (context, index) {
           final weather = items[index];
-          final date = DateFormat('EEE').format(weather.weatherDate); // Short day of the week
+          final date = DateFormat('EEE').format(weather.weatherDate);
           final minTemperature = '${(double.parse(weather.temperatureMin) - 273.15).toStringAsFixed(0)}°C';
           final maxTemperature = '${(double.parse(weather.temperatureMax) - 273.15).toStringAsFixed(0)}°C';
           final temperatures = '$minTemperature / $maxTemperature';
@@ -33,38 +33,36 @@ class HorizontalCardListView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Container(
-                width: 100, // Reduced card width
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                width: 100,
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6), // Reduced vertical padding
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade200, // Pale gray background
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: Colors.grey.shade300, // Subtle border
+                    color: Colors.grey.shade300,
                   ),
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min, // Add this to make column wrap content
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      weather.mainWeather, // Main weather (e.g., "Cloudy")
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Icon(
+                      _getWeatherIcon(weather.mainWeather),
+                      size: 24,
+                      color: Colors.black87,
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 2), // Reduced spacing
                     Text(
-                      (temperatures), // Temperature
+                      (temperatures),
                       style: textTheme.bodyMedium?.copyWith(
                         color: Colors.black87,
                         fontSize: 13,
                         fontWeight: FontWeight.bold
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2), // Reduced spacing
                     Text(
-                      date, // Short day of the week (e.g., "Mon")
+                      date,
                       style: textTheme.bodySmall?.copyWith(
                         color: Colors.black54,
                         fontSize: 13,
@@ -78,5 +76,26 @@ class HorizontalCardListView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  IconData _getWeatherIcon(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'clear':
+        return Icons.wb_sunny;
+      case 'clouds':
+        return Icons.cloud;
+      case 'rain':
+        return Icons.beach_access;  // umbrella icon
+      case 'thunderstorm':
+        return Icons.flash_on;
+      case 'snow':
+        return Icons.ac_unit;
+      case 'mist':
+      case 'fog':
+      case 'haze':
+        return Icons.cloud_queue;
+      default:
+        return Icons.question_mark;
+    }
   }
 }

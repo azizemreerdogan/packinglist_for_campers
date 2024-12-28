@@ -15,6 +15,9 @@ Future<List<Map<String, dynamic>>> fetchWeather(String lat,String lon) async {
       final List<dynamic> forecastList = data['list'];
       debugPrint("API request sent");
       debugPrint(response.body);
+      
+      
+  
 
       // Transform data to a list of maps with relevant fields
       return forecastList.map((e) {
