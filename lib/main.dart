@@ -9,7 +9,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() async{
   
   
-  await dotenv.load();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load(fileName: "assets/.env"); // Default is .env, but specify if needed
+  } catch (e) {
+    debugPrint('Error loading .env file: $e');
+  }
+  
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (context) => ThemesProvider()),
     ChangeNotifierProvider(create: (context) => PackingListProvider(),),

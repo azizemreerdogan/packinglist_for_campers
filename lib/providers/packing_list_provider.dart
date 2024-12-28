@@ -21,12 +21,11 @@ class PackingListProvider extends ChangeNotifier{
   }
   
   Future<void> addToList(PackingList packingList) async{
-    _packingList.add(packingList);
-    await dbHelper.insertPackingList(packingList);
-    notifyListeners();
-   
-  }
-  
+      int changedId = await dbHelper.insertPackingList(packingList);
+      packingList.id = changedId;
+      _packingList.add(packingList);
+      notifyListeners();
+    }
   Future<PackingList?> fetchPackingListById(int id) async{
     PackingList? packingList1 = await dbHelper.getPackingList(id);
     return packingList1;

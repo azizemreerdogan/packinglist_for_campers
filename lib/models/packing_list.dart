@@ -1,7 +1,7 @@
 import 'package:packinglist_for_campers/models/packing_item.dart';
 
 class PackingList {
-  final int _id;
+  int? _id;
   String _destination;
   String _listName;
   final DateTime? _startDate;
@@ -11,7 +11,7 @@ class PackingList {
   
 
   // Constructor
-  PackingList({required int id, required String destination,required String listName, DateTime? startDate,
+  PackingList({int? id, required String destination,required String listName, DateTime? startDate,
   DateTime? finishDate, List<PackingItem>? packingItems, Map<String,dynamic>? locationMap})
     : _id = id,
       _destination = destination,
@@ -27,7 +27,7 @@ class PackingList {
   }
   
   // Getters
-  int get id => _id;
+  int? get id => _id;
   String get destination => _destination;
   String get listName => _listName;
   DateTime? get startDate => _startDate;
@@ -43,6 +43,10 @@ class PackingList {
 
   set listName(String newListName) {
     _listName = newListName;
+  }
+  
+  set id(int? newId){
+    _id = newId;
   }
 
   // Convert to Map

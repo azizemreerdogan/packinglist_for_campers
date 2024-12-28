@@ -138,8 +138,8 @@ class _StartPageState extends State<StartPage> {
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
                     PackingItemsProvider packingItemsProvider = Provider.of<PackingItemsProvider>(context, listen: false);
-                    await packingItemsProvider.clearPackingItems(packingList.id);
-                    await packingListProvider.deletePackingList(packingList.id);
+                    await packingItemsProvider.clearPackingItems(packingList.id!);
+                    await packingListProvider.deletePackingList(packingList.id!);
                     
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

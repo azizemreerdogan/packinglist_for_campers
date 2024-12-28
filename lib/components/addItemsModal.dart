@@ -60,7 +60,7 @@ class _AdditemsmodalState extends State<Additemsmodal> {
                     ElevatedButton(
                       onPressed: () async{
                         PackingItem packingItem = PackingItem(id: null, name: itemNameController.text, isPacked: false);
-                        await packingItemsProvider.addToItemsList(packingItem, widget.packingList.id);
+                        await packingItemsProvider.addToItemsList(packingItem, widget.packingList.id!);
                         //await packingItemsProvider.fetchPackingItems(widget.packingList.id);
                         
                         debugPrint("addToItems called");
