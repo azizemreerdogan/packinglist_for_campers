@@ -1,171 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:packinglist_for_campers/models/packing_list.dart';
-import 'package:packinglist_for_campers/pages/list_page_view.dart';
-import 'package:packinglist_for_campers/providers/packing_items_provider.dart';
 import 'package:packinglist_for_campers/providers/packing_list_provider.dart';
-import 'package:packinglist_for_campers/providers/themes_provider.dart';
 import 'package:packinglist_for_campers/services/locations_api.dart';
 import 'package:packinglist_for_campers/utils/database_helper.dart';
 import 'package:provider/provider.dart';
-import 'package:packinglist_for_campers/components/newDrawer.dart';
-
-class StartPage extends StatefulWidget {
-  const StartPage({super.key});
-
-  @override
-  State<StartPage> createState() => _StartPageState();
-}
-
-class _StartPageState extends State<StartPage> {
-  List<PackingList> packingLists = [];
-  bool isSwitched = false;
-  final TextEditingController destination = TextEditingController();
-  final TextEditingController listName = TextEditingController();
-  DateTime? startDate;
-  DateTime? finishDate;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeData();
-  }
-
-  @override
-  void dispose() {
-    destination.dispose();
-    super.dispose();
-  }
-
-  Future<void> _initializeData() async {
-    try {
-      final packingListProvider =
-          Provider.of<PackingListProvider>(context, listen: false);
-      await packingListProvider.fetchPackingLists();
-    } catch (e) {
-      debugPrint('Error initializing data: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final dbHelper = DatabaseHelper();
-    final themesProvider = Provider.of<ThemesProvider>(context, listen: false);
-    final packingListProvider =
-        Provider.of<PackingListProvider>(context, listen: false);
-
-    packingLists = packingListProvider.packingLists;
-    Map<String, dynamic> destinationMap = {};
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('PackingList'),
-        centerTitle: true,
-        actions: [
-          AddDestinationButton(destination: destination, listName: listName),
-        ],
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-              icon: const Icon(Icons.settings),
-            );
-          },
-        ),
-      ),
-      resizeToAvoidBottomInset: true,
-      drawer: newDrawer(
-      themesProvider: themesProvider,
-      isSwitched: isSwitched,
-      onThemeToggle: (value) {
-        themesProvider.toggleTheme();
-        setState(() {
-          isSwitched  = true;
-        });
-      },
-      ),
-      body:
-        
-       ListViewConsumer(destinationMap),
-    );
-  }
-
-  
-  Consumer<PackingListProvider> ListViewConsumer(Map<String, dynamic> destinationMap) {
-    return Consumer<PackingListProvider>(
-      builder: (context, packingListProvider, child) {
-        final packingLists = packingListProvider.packingLists;
-
-        if (packingLists.isEmpty) {
-          return const Center(
-            child: Text(
-              'No packing lists found.',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          );
-        }
-
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: packingLists.length,
-          separatorBuilder: (context, index) => const Divider(),
-          itemBuilder: (context, index) {
-            final PackingList packingList = packingLists[index];
-            return Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 16,
-                ),
-                title: Text(
-                  packingList.listName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  packingList.destination,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () async {
-                    PackingItemsProvider packingItemsProvider = Provider.of<PackingItemsProvider>(context, listen: false);
-                    await packingItemsProvider.clearPackingItems(packingList.id!);
-                    await packingListProvider.deletePackingList(packingList.id!);
-                    
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Deleted: ${packingList.listName}'),
-                      ),
-                    );
-                  },
-                ),
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => ListPageView(packingList: packingList, destinationMap: packingListProvider.locationMap,)
-                  ));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Tapped: "${packingList.listName}" for ${packingList.destination}'),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
+import 'package:sqflite/sqflite.dart';
 
 class AddDestinationButton extends StatefulWidget {
   const AddDestinationButton({
@@ -174,6 +13,7 @@ class AddDestinationButton extends StatefulWidget {
     required this.listName,
     
   });
+  
 
   final TextEditingController destination;
   final TextEditingController listName;
@@ -396,6 +236,7 @@ class _AddDestinationButtonState extends State<AddDestinationButton> {
     );
   },
 );
+
 
   }
 }

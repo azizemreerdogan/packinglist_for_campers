@@ -81,7 +81,7 @@ class _AdditemsmodalState extends State<Additemsmodal> {
           },
         );
       },
-      child: const Text('Open Modal'),
+      child: const Text('Add Items',style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),),
     );
   }
 }

@@ -47,11 +47,11 @@ class _ListPageViewState extends State<ListPageView> {
     for (var element in itemsList) {
       debugPrint(element.name);
     }
-    List<Map<String, dynamic>> fetchedLocations = await fetchLocations(widget.packingList.destination);
+    List<Map<String, dynamic>> fetchedLocations = await LocationsApi.fetchLocations(widget.packingList.destination);
     Map<String,dynamic> destinationMap = fetchedLocations.first;
     String lat = destinationMap['lat'].toString();
     String lon = destinationMap['lon'].toString();
-    List<Map<String,dynamic>> fetchedWeather = await fetchWeather(lat, lon);
+    List<Map<String,dynamic>> fetchedWeather = await WeatherApi.fetchWeather(lat, lon);
     fetchedWeatherList = fetchedWeather;
     for (var element in fetchedWeatherList) {
       weatherObjectList.add(Weather.fromMapToObject(element)); 

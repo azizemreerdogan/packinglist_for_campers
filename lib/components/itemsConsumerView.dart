@@ -20,6 +20,7 @@ class Itemsconsumerview {
                 itemBuilder: (context, index) {
                   final item = packingItems[index]; // Access the current item
                   return Card(
+                    color: Theme.of(context).cardColor,
                     margin: const EdgeInsets.symmetric(vertical: 4.0), // Adds space between cards
                     elevation: 2, // Subtle shadow for better appearance
                     shape: RoundedRectangleBorder(
